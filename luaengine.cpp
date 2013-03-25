@@ -11,9 +11,8 @@ int LuaEngine::status;
 void LuaEngine::loadLuaLibs(void )
 {
     //Log("[LUA][INIT] Initialization", Log::DEBUG);
-	/*
+    /*
 	luaopen_io(L);
-	
 	luaopen_base(L);
 	luaopen_table(L);
 	luaopen_string(L);
@@ -67,11 +66,10 @@ void LuaEngine::registerFunction(const char* name, lua_CFunction func)
 	lua_register(L, name, func);
 }
 
-void LuaEngine::loadFile(const char* filename)
+bool LuaEngine::loadFile(const char* filename)
 {
     //Log(std::string("[LUA][LOAD]") + filename, Log::DEBUG);
-	//loadFileStatus = luaL_loadfile(L, filename);
-	loadFileStatus = luaL_dofile(L, filename);
+    return (loadFileStatus = luaL_dofile(L, filename)) == 0;
 }
 
 void LuaEngine::reload()

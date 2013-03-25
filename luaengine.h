@@ -27,8 +27,8 @@ public:
 		lua_close(L);
 	};
 	
-    virtual int callEvent(const char* table, const char* method, int args = 0, int returnValue = 0, bool asyncCall = false);
-    virtual int callEvent(const std::string& table, const std::string& method, int args = 0, int returnValue = 0, bool asyncCall = false);
+    int callEvent(const char* table, const char* method, int args = 0, int returnValue = 0, bool asyncCall = false);
+    int callEvent(const std::string& table, const std::string& method, int args = 0, int returnValue = 0, bool asyncCall = false);
 	struct CallEventArgs {
 		std::string table;
 		std::string method;
@@ -37,8 +37,8 @@ public:
 		bool async;
 	} callArgs;
 	void registerFunction(const char *name, lua_CFunction func);
-	void loadFile(const char* filename);
-	void loadFile(const std::string& filename) { loadFile(filename.c_str()); };
+    bool loadFile(const char* filename);
+    bool loadFile(const std::string& filename) { loadFile(filename.c_str()); };
 	void reload();
 	
 	int getStatus(){ return status; };

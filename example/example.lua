@@ -3,6 +3,6 @@ if not PichiCommands then
     PichiCommands = {}
 end
 
-function PichiCommands.example ( arg, pichiobject )
-		SendAnswer( pichiobject, "Simple Example" )
+function PichiCommands.example ( arg )
+		io.write( arg )
 end
