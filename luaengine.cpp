@@ -45,6 +45,11 @@ void* LuaEngine::call_thread(void* context)
 	return context;
 }
 
+int LuaEngine::callEvent(const char* table, const char* method, int args /* = 0 */, int returnValue /* = 0 */, bool asyncCall /* = false */)
+{
+    return callEvent(std::string(table), std::string(method), args, returnValue, asyncCall);
+}
+
 int LuaEngine::callEvent(const std::string& table, const std::string& method, int args, int ret, bool async)
 {
 	callArgs = {table, method, args, ret, async};

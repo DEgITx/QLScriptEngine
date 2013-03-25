@@ -25,9 +25,14 @@ set(SOURCES_LOCAL
         qlscriptengine.cpp
 )
 
+set(LINK_LIBRARIES_LOCAL
+        ""
+)
+
 if(WITH_LUA)
       find_package(Lua51 REQUIRED)
       include_directories(${LUA_INCLUDE_DIR})
+      set(LINK_LIBRARIES_LOCAL ${LINK_LIBRARIES_LOCAL} ${LUA_LIBRARIES})
       add_definitions(-DWITH_LUA)
 endif(WITH_LUA)
 
@@ -47,7 +52,7 @@ add_library(QLScriptEngine STATIC
 
 
 
-#target_link_libraries(Video
-#     	${FFMPEG_LIBRARIES_STANDART}
-#	${MACOSX_FRAMEWORK_LIBS}
-#)
+target_link_libraries(QLScriptEngine
+        ${LINK_LIBRARIES_LOCAL}
+        pthread
+)
