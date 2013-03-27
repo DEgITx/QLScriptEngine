@@ -12,7 +12,7 @@ extern "C" {
 #include "qlscriptengine.h"
 #include <string>
 #include <map>
-#include <pthread.h>
+#include <thread>
 
 namespace QLScriptEngine
 {
@@ -20,22 +20,20 @@ namespace QLScriptEngine
 class LuaEngine : public QLScriptEngine
 {
 public:
-    LuaEngine() : L(lua_open()) {
-		loadLuaLibs();
-	};
-    ~LuaEngine() {
-		lua_close(L);
-	};
-	
-    int callEvent(const char* table, const char* method, int args = 0, int returnValue = 0, bool asyncCall = false);
-    int callEvent(const std::string& table, const std::string& method, int args = 0, int returnValue = 0, bool asyncCall = false);
-	struct CallEventArgs {
+	struct LuaEventContext
+	{
+		lua_State *L;
 		std::string table;
 		std::string method;
 		int args;
 		int ret;
-		bool async;
-	} callArgs;
+	};
+
+    LuaEngine();
+    ~LuaEngine();
+	
+    int callEvent(const char* table, const char* method, int args = 0, int returnValue = 0, bool asyncCall = false);
+    int callEvent(const std::string& table, const std::string& method, int args = 0, int returnValue = 0, bool asyncCall = false);
 	void registerFunction(const char *name, lua_CFunction func);
     bool loadFile(const char* filename);
     bool loadFile(const std::string& filename) { loadFile(filename.c_str()); };
@@ -62,13 +60,11 @@ public:
 	};
 	std::map<std::string, std::string> luaPopTable(void);
 protected:
-	lua_State *L;
-	std::map<std::string, pthread_t> callThread;
-	static void *call_thread(void *context);
+	static void call_thread(const LuaEventContext& context);
 	static int status;
 	int loadFileStatus;
 private:
-	void loadLuaLibs(void);
+	lua_State *L;
 	static void reportError(lua_State *L);
 };
 

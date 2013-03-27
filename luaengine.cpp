@@ -7,41 +7,34 @@ namespace QLScriptEngine
 {
 
 int LuaEngine::status;
-  
-void LuaEngine::loadLuaLibs(void )
+
+LuaEngine::LuaEngine() : L(lua_open())
 {
-    //Log("[LUA][INIT] Initialization", Log::DEBUG);
-    /*
-	luaopen_io(L);
-	luaopen_base(L);
-	luaopen_table(L);
-	luaopen_string(L);
-	luaopen_math(L);
-	*/
 	luaL_openlibs(L);
 }
 
-void* LuaEngine::call_thread(void* context)
+LuaEngine::~LuaEngine()
 {
-    LuaEngine* th = (LuaEngine*)context;
+	lua_close(L);
+}
+
+void LuaEngine::call_thread(const LuaEventContext& context)
+{
     //Log(std::string("[LUA][CALL]") + th->callArgs.table + ":" + th->callArgs.method, Log::VERBOSE);
-	lua_getglobal(th->L, th->callArgs.table.c_str()); // args + 1
-	lua_pushstring(th->L, th->callArgs.method.c_str()); // args + 2
-	if(lua_istable(th->L, -2)) // есть такая таблица
+	lua_getglobal(context.L, context.table.c_str()); // args + 1
+	lua_pushstring(context.L, context.method.c_str()); // args + 2
+	if(lua_istable(context.L, -2)) // есть такая таблица
 	{
-		lua_gettable(th->L, -2); // args + 2
-		lua_remove(th->L, -2); // args + 1
-		lua_insert(th->L, 1); // args + 1 (смещаем на 1 вниз)
-        LuaEngine::status = lua_pcall(th->L, th->callArgs.args, th->callArgs.ret, 0);
-		reportError(th->L);
+		lua_gettable(context.L, -2); // args + 2
+		lua_remove(context.L, -2); // args + 1
+		lua_insert(context.L, 1); // args + 1 (смещаем на 1 вниз)
+        LuaEngine::status = lua_pcall(context.L, context.args, context.ret, 0);
+		reportError(context.L);
 	}
 	else 
 	{
-		lua_settop(th->L, 0);
+		lua_settop(context.L, 0);
 	}
-	
-	pthread_exit(context);
-	return context;
 }
 
 int LuaEngine::callEvent(const char* table, const char* method, int args /* = 0 */, int returnValue /* = 0 */, bool asyncCall /* = false */)
@@ -51,12 +44,12 @@ int LuaEngine::callEvent(const char* table, const char* method, int args /* = 0 
 
 int LuaEngine::callEvent(const std::string& table, const std::string& method, int args, int ret, bool async)
 {
-	callArgs = {table, method, args, ret, async};
-    if(pthread_create(&callThread[table + method], NULL, &LuaEngine::call_thread, (void*)this) != 0)
-		return 1;
+	LuaEventContext context = {L, table, method, args, ret};
+	std::thread thread(call_thread, context);
 	if(!async)
-		if(pthread_join(callThread[table + method], NULL) != 0)
-			return 1;
+	{
+		thread.join();
+	}
 	return 0;
 }
 
@@ -77,7 +70,7 @@ void LuaEngine::reload()
 	// Full reload
 	lua_close(L);
 	L = lua_open();
-	loadLuaLibs();
+	luaL_openlibs(L);
 }
 
 void LuaEngine::reportError(lua_State *L)

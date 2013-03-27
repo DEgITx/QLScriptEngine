@@ -4,6 +4,12 @@ cmake_minimum_required(VERSION 2.8)
 project(QLScriptEngine)
 
 option (WITH_LUA "Enables lua script engine" ON)
+if(WIN32)
+	option (BUILD_LUA "Enables lua self build" ON)
+else()
+	option (BUILD_LUA "Enables lua self build" OFF)
+endif()
+
 
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
@@ -32,7 +38,7 @@ set(LINK_LIBRARIES_LOCAL
 if(WITH_LUA)
 	  if (BUILD_LUA)
 			add_subdirectory(lua)
-			include_directories ("${PROJECT_SOURCE_DIR}/lua")
+			include_directories ("${CMAKE_CURRENT_SOURCE_DIR}/lua")
 			set (LUA_LIBRARIES "lua")
 		else (BUILD_LUA)
 			find_package(Lua51 REQUIRED)
@@ -60,5 +66,4 @@ add_library(QLScriptEngine STATIC
 
 target_link_libraries(QLScriptEngine
         ${LINK_LIBRARIES_LOCAL}
-        pthread
 )
