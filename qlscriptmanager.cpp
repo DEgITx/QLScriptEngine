@@ -68,6 +68,14 @@ void QLScriptManager::loadScripts()
 	}
 }
 
+void QLScriptManager::exportVariable( const char* name, const QVariant& value )
+{
+	foreach(QLScriptEngine* engine, m_engines)
+	{
+		engine->exportVariable(name, value);
+	}
+}
+
 
 
 }

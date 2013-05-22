@@ -35,13 +35,6 @@ QScriptEngine* JSEngine::scriptEngine()
 }
 */
 
-void JSEngine::exposeQObject(QObject* obj, const QString& scriptVarName)
-{
-	Q_ASSERT(obj);
-	QScriptValue appProperty = m_scriptEngine.newQObject(obj);
-	m_scriptEngine.globalObject().setProperty(scriptVarName, appProperty);
-}
-
 bool JSEngine::loadFile( const char* filename )
 {
 	//Q_ASSERT(m_scriptEngine);
@@ -113,6 +106,17 @@ QVariant JSEngine::invokeFunction(const char* object, const char* method, const 
 	QScriptValue result = func.call(QScriptValue(), m_callParams);
 	m_callParams.clear();
 	return result.toVariant();
+}
+
+void JSEngine::exportVariable( const char* name, const QVariant& value )
+{
+	QObject* qobject = qvariant_cast<QObject*>(value);
+	if(qobject != nullptr)
+	{
+		QScriptValue appProperty = m_scriptEngine.newQObject(qobject);
+		m_scriptEngine.globalObject().setProperty(QString(name), appProperty);
+		return;
+	}
 }
 
 

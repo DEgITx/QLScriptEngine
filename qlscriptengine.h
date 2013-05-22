@@ -16,6 +16,7 @@ public:
 	
     virtual QVariant invokeFunction(const char* object, const char* method, const QVariantList& arguments = QVariantList(), QLSCallback callback = nullptr) = 0;
     virtual bool loadFile(const char* filename) = 0;
+	virtual void exportVariable(const char* name, const QVariant& value) = 0;
 };
 
 }

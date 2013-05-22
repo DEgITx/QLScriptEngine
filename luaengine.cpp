@@ -40,7 +40,11 @@ void LuaEngine::call_thread(const LuaEventContext& context)
 QVariant LuaEngine::invokeFunction( const char* object, const char* method, const QVariantList& arguments /*= QVariantList()*/, QLSCallback callback /*= nullptr*/ )
 {
 	int argc = arguments.count();
+#ifdef Q_OS_WIN
+	foreach(const QVariant& argv, arguments)
+#else
 	for(const QVariant& argv : arguments)
+#endif
 	{
 		luaPush(argv);
 	}
@@ -81,11 +85,20 @@ QVariant LuaEngine::invokeFunction( const char* object, const char* method, cons
 int LuaEngine::invokeFunction(const std::string& table, const std::string& method, int args, int ret, bool async)
 {
 	LuaEventContext context = {L, table, method, args, ret};
+#ifndef Q_OS_WIN32
 	std::thread thread(call_thread, context);
 	if(!async)
 	{
 		thread.join();
 	}
+#else
+	call_thread_q.context = context;
+	call_thread_q.start();
+	if(!async)
+	{
+		call_thread_q.wait();
+	}
+#endif
 	return 0;
 }
 
@@ -146,7 +159,12 @@ void LuaEngine::luaPush(void* func)
 void LuaEngine::luaPush(const std::map< std::string, std::string >& map)
 {
 	lua_newtable(L);
+#ifdef Q_OS_WIN
+	typedef std::pair<std::string, std::string> PairStrings;
+	foreach(PairStrings row, map)
+#else
 	for(std::pair<std::string, std::string> row : map)
+#endif
 	{
 		lua_pushstring(L, row.first.c_str());
 		lua_pushstring(L, row.second.c_str());
@@ -248,6 +266,18 @@ std::map< std::string, std::string > LuaEngine::luaPopTable(void )
 	}
 	return table;
 }
+
+void LuaEngine::exportVariable( const char* name, const QVariant& value )
+{
+
+}
+
+#ifdef Q_OS_WIN32
+void LuaEngine::_CallThread::run()
+{
+	call_thread(this->context);
+}
+#endif
 
 }
 

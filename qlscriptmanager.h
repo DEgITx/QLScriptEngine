@@ -27,6 +27,7 @@ public:
 	QHash<QString, QVariant> invoke(const char* object, const char* method, const QVariantList& arguments = QVariantList(), QLScriptEngine::QLSCallback callback = nullptr);
 	void setScriptsDirectory(const QDir& directory);
 	void loadScripts();
+	void exportVariable(const char* name, const QVariant& value);
 private:
 	QHash<QString, QLScriptEngine*> m_engines;
 	QDir m_scriptsDirectory;

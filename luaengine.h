@@ -12,7 +12,12 @@ extern "C" {
 #include "qlscriptengine.h"
 #include <string>
 #include <map>
+
+#ifdef Q_OS_WIN32
+#include <QThread>
+#else
 #include <thread>
+#endif
 
 #include <QString>
 
@@ -61,6 +66,7 @@ public:
 	void luaPush(const QMap<QString, QVariant>& hash);
 	template< typename T > void luaPush(T* p){ luaPush((void*)p); };
 
+	void exportVariable(const char* name, const QVariant& value) override;
 
 	std::string luaPopString(void);
 	double luaPopNumber(void);
@@ -73,7 +79,16 @@ public:
 	};
 	std::map<std::string, std::string> luaPopTable(void);
 protected:
+#ifdef Q_OS_WIN32
+	class _CallThread : public QThread
+	{
+	public:
+		void run() override;
+		LuaEventContext context;
+	} call_thread_q;
+#endif
 	static void call_thread(const LuaEventContext& context);
+
 	static int status;
 	int loadFileStatus;
 private:
