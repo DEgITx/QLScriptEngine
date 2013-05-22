@@ -106,7 +106,10 @@ QVariant JSEngine::invokeFunction(const char* object, const char* method, const 
 		}
 	}
 	QScriptValue func = m_scriptEngine.globalObject().property(object).property(method);
-	Q_ASSERT(func.isValid());
+	if(!func.isValid())
+	{
+		return QVariant();
+	}
 	QScriptValue result = func.call(QScriptValue(), m_callParams);
 	m_callParams.clear();
 	return result.toVariant();
