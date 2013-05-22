@@ -37,12 +37,48 @@ void LuaEngine::call_thread(const LuaEventContext& context)
 	}
 }
 
-int LuaEngine::callEvent(const char* table, const char* method, int args /* = 0 */, int returnValue /* = 0 */, bool asyncCall /* = false */)
+QVariant LuaEngine::invokeFunction( const char* object, const char* method, const QVariantList& arguments /*= QVariantList()*/, QLSCallback callback /*= nullptr*/ )
 {
-    return callEvent(std::string(table), std::string(method), args, returnValue, asyncCall);
+	int argc = arguments.count();
+	for(const QVariant& argv : arguments)
+	{
+		luaPush(argv);
+	}
+	
+	invokeFunction(std::string(object), std::string(method), argc, 1, callback != nullptr);
+
+	QVariant result;
+
+	if(lua_isnumber(L, -1))
+	{
+		result = luaPopNumber();
+	}
+	else if(lua_isstring(L, -1))
+	{
+		result = QString(luaPopString().c_str());
+	}
+	else if(lua_isuserdata(L, -1))
+	{
+		result = (qulonglong)lua_touserdata(L, -1);
+	}
+	else if(lua_istable(L, -1))
+	{
+		QHash<QString, QVariant> table;
+		lua_pushnil(L);
+		while(lua_next(L, -2) != 0)
+		{
+			table[lua_tostring(L, -2)] = lua_tostring(L, -1);
+			lua_pop(L, 1);
+		}
+		lua_pop(L, 1); // remove table
+
+		result = table;
+	}
+
+    return result;
 }
 
-int LuaEngine::callEvent(const std::string& table, const std::string& method, int args, int ret, bool async)
+int LuaEngine::invokeFunction(const std::string& table, const std::string& method, int args, int ret, bool async)
 {
 	LuaEventContext context = {L, table, method, args, ret};
 	std::thread thread(call_thread, context);
@@ -114,6 +150,67 @@ void LuaEngine::luaPush(const std::map< std::string, std::string >& map)
 	{
 		lua_pushstring(L, row.first.c_str());
 		lua_pushstring(L, row.second.c_str());
+		lua_settable(L,-3);
+	}
+}
+
+void LuaEngine::luaPush(const QString& string)
+{
+	luaPush(string.toStdString());
+}
+
+void LuaEngine::luaPush(const QVariant& variant)
+{
+	switch (variant.type())
+	{
+	case QVariant::Bool:
+		{
+			luaPush(variant.toBool());
+			break;
+		}
+	case QVariant::String:
+		{
+			luaPush(variant.toString());
+			break;
+		}
+	case QVariant::Int:
+		{
+			luaPush(variant.toInt());
+			break;
+		}
+	case QVariant::Map:
+		{
+			luaPush(variant.toMap());
+			break;
+		}
+	case QVariant::Hash:
+		{
+			luaPush(variant.toHash());
+			break;
+		}
+	default:
+		break;
+	}
+}
+
+void LuaEngine::luaPush(const QHash<QString, QVariant>& hash)
+{
+	lua_newtable(L);
+	for(QHash<QString, QVariant>::const_iterator it = hash.constBegin(); it != hash.constEnd(); ++it)
+	{
+		luaPush(it.key());
+		luaPush(it.value());
+		lua_settable(L,-3);
+	}
+}
+
+void LuaEngine::luaPush(const QMap<QString, QVariant>& hash)
+{
+	lua_newtable(L);
+	for(QMap<QString, QVariant>::const_iterator it = hash.constBegin(); it != hash.constEnd(); ++it)
+	{
+		luaPush(it.key());
+		luaPush(it.value());
 		lua_settable(L,-3);
 	}
 }

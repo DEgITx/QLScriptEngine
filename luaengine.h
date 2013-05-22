@@ -14,6 +14,8 @@ extern "C" {
 #include <map>
 #include <thread>
 
+#include <QString>
+
 namespace QLScriptEngine
 {
   
@@ -30,10 +32,10 @@ public:
 	};
 
     LuaEngine();
-    ~LuaEngine();
+    virtual ~LuaEngine();
 	
-    int callEvent(const char* table, const char* method, int args = 0, int returnValue = 0, bool asyncCall = false);
-    int callEvent(const std::string& table, const std::string& method, int args = 0, int returnValue = 0, bool asyncCall = false);
+    QVariant invokeFunction(const char* object, const char* method, const QVariantList& arguments = QVariantList(), QLSCallback callback = nullptr) override;
+    int invokeFunction(const std::string& table, const std::string& method, int args = 0, int returnValue = 0, bool asyncCall = false);
 	void registerFunction(const char *name, lua_CFunction func);
     bool loadFile(const char* filename);
     bool loadFile(const std::string& filename) { loadFile(filename.c_str()); };
@@ -42,13 +44,24 @@ public:
 	int getStatus(){ return status; };
 	int getFileStatus(){ return loadFileStatus; };
 	
+	// Push templates
+	template< typename T > void push(const T& value)
+	{
+		luaPush(value);
+	}
 	void luaPush(int i);
 	void luaPush(bool b);
 	void luaPush(const std::string& str);
 	void luaPush(const std::map<std::string, std::string>& map);
 	void luaPush(const char* str);
 	void luaPush(void* func);
+	void luaPush(const QString& string);
+	void luaPush(const QVariant& variant);
+	void luaPush(const QHash<QString, QVariant>& hash);
+	void luaPush(const QMap<QString, QVariant>& hash);
 	template< typename T > void luaPush(T* p){ luaPush((void*)p); };
+
+
 	std::string luaPopString(void);
 	double luaPopNumber(void);
 	template< typename T> T* luaPopData(void) {

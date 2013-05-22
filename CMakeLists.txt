@@ -23,11 +23,15 @@ set(HEADERS_LOCAL_TOMOC
 
 set(HEADERS_LOCAL
 	luaengine.h
+	jsengine.h
+	qlscriptmanager.h
         qlscriptengine.h
 )
 
 set(SOURCES_LOCAL
 	luaengine.cpp
+	jsengine.cpp
+	qlscriptmanager.cpp
         qlscriptengine.cpp
 )
 
@@ -48,6 +52,7 @@ if(WITH_LUA)
 		add_definitions(-DWITH_LUA)
 endif(WITH_LUA)
 
+
 #QT4_WRAP_CPP(MOC_LOCAL ${HEADERS_LOCAL_TOMOC})
 
 source_group("qlscriptengine\\Sources" FILES 
@@ -66,4 +71,7 @@ add_library(QLScriptEngine STATIC
 
 target_link_libraries(QLScriptEngine
         ${LINK_LIBRARIES_LOCAL}
+	${Qt5Core_LIBRARIES}
+	${Qt5ScriptTools_LIBRARIES}
+	${Qt5Script_LIBRARIES}
 )
