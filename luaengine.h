@@ -23,32 +23,33 @@ extern "C" {
 
 namespace QLScriptEngine
 {
-  
+
 class LuaEngine : public QLScriptEngine
 {
 public:
 	struct LuaEventContext
 	{
-		lua_State *L;
+		lua_State* L;
 		std::string table;
 		std::string method;
 		int args;
 		int ret;
 	};
 
-    LuaEngine();
-    virtual ~LuaEngine();
-	
-    QVariant invokeFunction(const char* object, const char* method, const QVariantList& arguments = QVariantList(), QLSCallback callback = nullptr) override;
-    int invokeFunction(const std::string& table, const std::string& method, int args = 0, int returnValue = 0, bool asyncCall = false);
-	void registerFunction(const char *name, lua_CFunction func);
-    bool loadFile(const char* filename);
-    bool loadFile(const std::string& filename) { loadFile(filename.c_str()); };
+	LuaEngine();
+	virtual ~LuaEngine();
+
+	QVariant invokeFunction(const char* function, const QVariantList& arguments = QVariantList(), QLSCallback callback = nullptr) override;
+	QVariant invokeFunction(const char* object, const char* method, const QVariantList& arguments = QVariantList(), QLSCallback callback = nullptr) override;
+	int invokeFunction(const std::string& table, const std::string& method, int args = 0, int returnValue = 0, bool asyncCall = false);
+	void registerFunction(const char* name, lua_CFunction func);
+	bool loadFile(const char* filename);
+	bool loadFile(const std::string& filename) { loadFile(filename.c_str()); };
 	void reload();
-	
-	int getStatus(){ return status; };
-	int getFileStatus(){ return loadFileStatus; };
-	
+
+	int getStatus() { return status; };
+	int getFileStatus() { return loadFileStatus; };
+
 	// Push templates
 	template< typename T > void push(const T& value)
 	{
@@ -64,16 +65,19 @@ public:
 	void luaPush(const QVariant& variant);
 	void luaPush(const QHash<QString, QVariant>& hash);
 	void luaPush(const QMap<QString, QVariant>& hash);
-	template< typename T > void luaPush(T* p){ luaPush((void*)p); };
+	template< typename T > void luaPush(T* p) { luaPush((void*)p); };
 
 	void exportVariable(const char* name, const QVariant& value) override;
 
 	std::string luaPopString(void);
 	double luaPopNumber(void);
-	template< typename T> T* luaPopData(void) {
+	template< typename T> T* luaPopData(void)
+	{
 		T* back;
-		if(lua_isuserdata(L, -1))
+		if (lua_isuserdata(L, -1))
+		{
 			back = lua_touserdata(L, -1);
+		}
 		lua_pop(L, 1);
 		return back;
 	};
@@ -92,8 +96,8 @@ protected:
 	static int status;
 	int loadFileStatus;
 private:
-	lua_State *L;
-	static void reportError(lua_State *L);
+	lua_State* L;
+	static void reportError(lua_State* L);
 };
 
 }
